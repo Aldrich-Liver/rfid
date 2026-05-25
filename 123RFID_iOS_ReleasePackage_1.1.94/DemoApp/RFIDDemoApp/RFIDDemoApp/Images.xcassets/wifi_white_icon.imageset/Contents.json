@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "3994418_internet_network_signal_wifi_wireless_icon.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "3994418_internet_network_signal_wifi_wireless_icon (1).png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "3994418_internet_network_signal_wifi_wireless_icon (2).png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

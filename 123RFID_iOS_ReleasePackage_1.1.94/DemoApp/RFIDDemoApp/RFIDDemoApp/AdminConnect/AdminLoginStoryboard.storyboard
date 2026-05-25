@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Admin LoginVC-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController storyboardIdentifier="LOGIN_BOARD_ID" id="Y6W-OH-hqX" customClass="AdminLoginVC" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Password" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="3Qk-fz-Dxz">
+                                <rect key="frame" x="25" y="158" width="343" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="U5F-ef-faU"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <textInputTraits key="textInputTraits" returnKeyType="done"/>
+                                <connections>
+                                    <outlet property="delegate" destination="Y6W-OH-hqX" id="gbC-jE-f0O"/>
+                                </connections>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4nx-iz-Df6">
+                                <rect key="frame" x="25" y="228" width="343" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="EWp-sJ-M2T"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Login">
+                                    <backgroundConfiguration key="background">
+                                        <color key="backgroundColor" name="rfid_theme_color"/>
+                                    </backgroundConfiguration>
+                                    <fontDescription key="titleFontDescription" type="boldSystem" pointSize="18"/>
+                                    <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </buttonConfiguration>
+                                <connections>
+                                    <action selector="loginButtonAction:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="Z6f-rw-S8I"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Fwf-R3-MuU">
+                                <rect key="frame" x="25" y="283" width="343" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="GxN-H8-HY7"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Change Password">
+                                    <backgroundConfiguration key="background">
+                                        <color key="backgroundColor" name="rfid_theme_color"/>
+                                    </backgroundConfiguration>
+                                    <fontDescription key="titleFontDescription" type="boldSystem" pointSize="18"/>
+                                    <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </buttonConfiguration>
+                                <connections>
+                                    <action selector="changePWButtonAction:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="ohY-W0-jj6"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="Fwf-R3-MuU" secondAttribute="trailing" constant="25" id="8uB-CM-DGK"/>
+                            <constraint firstItem="Fwf-R3-MuU" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" constant="25" id="AIe-PY-sek"/>
+                            <constraint firstItem="3Qk-fz-Dxz" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" constant="40" id="D7e-4O-lVG"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="4nx-iz-Df6" secondAttribute="trailing" constant="25" id="IUF-uH-oWm"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="3Qk-fz-Dxz" secondAttribute="trailing" constant="25" id="JoX-tT-Pps"/>
+                            <constraint firstItem="4nx-iz-Df6" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" constant="25" id="Y6f-hs-Ftd"/>
+                            <constraint firstItem="3Qk-fz-Dxz" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" constant="25" id="l87-4F-bQf"/>
+                            <constraint firstItem="Fwf-R3-MuU" firstAttribute="top" secondItem="4nx-iz-Df6" secondAttribute="bottom" constant="15" id="lp2-Ob-oEw"/>
+                            <constraint firstItem="4nx-iz-Df6" firstAttribute="top" secondItem="3Qk-fz-Dxz" secondAttribute="bottom" constant="30" id="maj-RW-82p"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="button_Change_pw" destination="Fwf-R3-MuU" id="y3t-Pw-d3L"/>
+                        <outlet property="button_Login" destination="4nx-iz-Df6" id="bbB-0c-9gV"/>
+                        <outlet property="passwordField" destination="3Qk-fz-Dxz" id="KOq-2d-zic"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1022.1374045801526" y="-673.23943661971839"/>
+        </scene>
+        <!--Change PasswordVC-->
+        <scene sceneID="Etr-Da-C7z">
+            <objects>
+                <viewController storyboardIdentifier="CHANGEPW_BOARD_ID" id="hPz-Yu-Rrd" customClass="ChangePasswordVC" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="9in-hD-kFg">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="g4c-J9-SP9">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="325"/>
+                                <subviews>
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Old Password" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="3Se-y1-AJx">
+                                        <rect key="frame" x="25" y="30" width="343" height="40"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="40" id="Met-TV-BHo"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <textInputTraits key="textInputTraits" returnKeyType="done"/>
+                                        <connections>
+                                            <outlet property="delegate" destination="hPz-Yu-Rrd" id="a3J-ad-816"/>
+                                        </connections>
+                                    </textField>
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="New Password" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="VSO-QE-gR2">
+                                        <rect key="frame" x="25" y="85" width="343" height="40"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="40" id="bv5-w2-Vwp"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <textInputTraits key="textInputTraits" returnKeyType="done"/>
+                                        <connections>
+                                            <outlet property="delegate" destination="hPz-Yu-Rrd" id="e74-Wj-JuW"/>
+                                        </connections>
+                                    </textField>
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Confirm Password" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="s5e-1V-QTn">
+                                        <rect key="frame" x="25" y="140" width="343" height="40"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="40" id="jDz-kX-omp"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <textInputTraits key="textInputTraits" returnKeyType="done"/>
+                                        <connections>
+                                            <outlet property="delegate" destination="hPz-Yu-Rrd" id="LHM-Kr-PXa"/>
+                                        </connections>
+                                    </textField>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gFD-Io-zkn">
+                                        <rect key="frame" x="25" y="270" width="343" height="40"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="40" id="qKg-nr-LH9"/>
+                                        </constraints>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="Submit">
+                                            <backgroundConfiguration key="background">
+                                                <color key="backgroundColor" name="rfid_theme_color"/>
+                                            </backgroundConfiguration>
+                                            <fontDescription key="titleFontDescription" type="boldSystem" pointSize="18"/>
+                                            <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </buttonConfiguration>
+                                        <connections>
+                                            <action selector="submitButtonAction:" destination="hPz-Yu-Rrd" eventType="touchUpInside" id="n9R-J0-m2z"/>
+                                        </connections>
+                                    </button>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Rbw-eU-1Vw">
+                                        <rect key="frame" x="25" y="190" width="343" height="70"/>
+                                        <string key="text">Note: Password must have one upper case letter, one lower case letter, one special char, one numeric value, length should be min 9 and max 31 character.</string>
+                                        <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                        <color key="textColor" systemColor="systemGray2Color"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstItem="VSO-QE-gR2" firstAttribute="leading" secondItem="g4c-J9-SP9" secondAttribute="leading" constant="25" id="1g5-Gt-qa0"/>
+                                    <constraint firstItem="s5e-1V-QTn" firstAttribute="top" secondItem="VSO-QE-gR2" secondAttribute="bottom" constant="15" id="73Q-SV-hYl"/>
+                                    <constraint firstAttribute="trailing" secondItem="Rbw-eU-1Vw" secondAttribute="trailing" constant="25" id="B1i-vm-Tm3"/>
+                                    <constraint firstItem="Rbw-eU-1Vw" firstAttribute="top" secondItem="s5e-1V-QTn" secondAttribute="bottom" constant="10" id="GJI-4H-3RE"/>
+                                    <constraint firstItem="VSO-QE-gR2" firstAttribute="top" secondItem="3Se-y1-AJx" secondAttribute="bottom" constant="15" id="MmD-Js-kbx"/>
+                                    <constraint firstAttribute="bottom" secondItem="gFD-Io-zkn" secondAttribute="bottom" constant="15" id="PAh-Jb-sDP"/>
+                                    <constraint firstAttribute="trailing" secondItem="s5e-1V-QTn" secondAttribute="trailing" constant="25" id="Ppd-8l-5wo"/>
+                                    <constraint firstAttribute="trailing" secondItem="gFD-Io-zkn" secondAttribute="trailing" constant="25" id="TPt-XI-tEX"/>
+                                    <constraint firstAttribute="trailing" secondItem="3Se-y1-AJx" secondAttribute="trailing" constant="25" id="Vrf-Hy-pw0"/>
+                                    <constraint firstItem="3Se-y1-AJx" firstAttribute="top" secondItem="g4c-J9-SP9" secondAttribute="top" constant="30" id="Zfz-br-Onf"/>
+                                    <constraint firstAttribute="height" constant="325" id="eN7-fN-mSO"/>
+                                    <constraint firstItem="3Se-y1-AJx" firstAttribute="leading" secondItem="g4c-J9-SP9" secondAttribute="leading" constant="25" id="j9e-sK-v87"/>
+                                    <constraint firstItem="s5e-1V-QTn" firstAttribute="leading" secondItem="g4c-J9-SP9" secondAttribute="leading" constant="25" id="kzF-M3-xR2"/>
+                                    <constraint firstItem="gFD-Io-zkn" firstAttribute="top" secondItem="Rbw-eU-1Vw" secondAttribute="bottom" constant="10" id="qef-Z8-iiG"/>
+                                    <constraint firstItem="gFD-Io-zkn" firstAttribute="leading" secondItem="g4c-J9-SP9" secondAttribute="leading" constant="25" id="rTa-HM-qwd"/>
+                                    <constraint firstAttribute="trailing" secondItem="VSO-QE-gR2" secondAttribute="trailing" constant="25" id="wgy-PF-uUu"/>
+                                    <constraint firstItem="Rbw-eU-1Vw" firstAttribute="leading" secondItem="g4c-J9-SP9" secondAttribute="leading" constant="25" id="zod-4g-dHO"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="sFZ-Ul-aSs"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="g4c-J9-SP9" firstAttribute="top" secondItem="9in-hD-kFg" secondAttribute="top" id="4sU-9l-C1K"/>
+                            <constraint firstItem="g4c-J9-SP9" firstAttribute="leading" secondItem="sFZ-Ul-aSs" secondAttribute="leading" id="Ccm-sC-CLz"/>
+                            <constraint firstItem="g4c-J9-SP9" firstAttribute="trailing" secondItem="sFZ-Ul-aSs" secondAttribute="trailing" id="fct-kh-Keg"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="button_Submit" destination="gFD-Io-zkn" id="WTe-Zo-Tbj"/>
+                        <outlet property="confirmPasswordField" destination="s5e-1V-QTn" id="tmp-Vj-REf"/>
+                        <outlet property="newPasswordField" destination="VSO-QE-gR2" id="cT1-ZR-lke"/>
+                        <outlet property="oldPasswordField" destination="3Se-y1-AJx" id="jir-Np-mGC"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="7ca-kM-o5d" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-274.04580152671753" y="-673.23943661971839"/>
+        </scene>
+    </scenes>
+    <resources>
+        <namedColor name="rfid_theme_color">
+            <color red="0.0" green="0.48627450980392156" blue="0.7686274509803922" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemGray2Color">
+            <color red="0.68235294120000001" green="0.68235294120000001" blue="0.69803921570000005" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>

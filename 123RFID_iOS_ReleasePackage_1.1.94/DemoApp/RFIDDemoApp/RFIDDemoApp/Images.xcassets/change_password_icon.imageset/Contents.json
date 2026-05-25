@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "7023958_password_account_security_reset_safety_icon 1.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "7023958_password_account_security_reset_safety_icon.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "7023958_password_account_security_reset_safety_icon (1).png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
