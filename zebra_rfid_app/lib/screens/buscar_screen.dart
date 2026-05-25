@@ -107,11 +107,6 @@ class _BuscarScreenState extends State<BuscarScreen>
     _tagSub?.cancel();
     _tagSub = widget.rfid.tagStream.listen(_onTags, onError: _onError);
 
-    // In simulator, tell the mock which EPC to emit
-    if (ZebraRfidService.isMock && _looksLikeEpc(raw)) {
-      widget.rfid.setMockEpc(raw);
-    }
-
     try {
       await widget.rfid.startInventory();
     } on PlatformException catch (e) {
@@ -345,15 +340,6 @@ class _BuscarScreenState extends State<BuscarScreen>
                 onSearch: _startScan,
               ),
               const SizedBox(height: 12),
-
-              // ── Simulator hint ───────────────────────────────────
-              if (ZebraRfidService.isMock && !_isScanning)
-                _SimulatorBanner(onUseDemoEpc: () {
-                  _inputCtrl.text = '300000000000000000000001';
-                }),
-
-              if (ZebraRfidService.isMock && !_isScanning)
-                const SizedBox(height: 12),
 
               // ── Status banner ────────────────────────────────────
               if (_isScanning)
@@ -743,49 +729,6 @@ class _IdleBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const SizedBox.shrink();
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Simulator hint banner (iOS only)
-// ---------------------------------------------------------------------------
-class _SimulatorBanner extends StatelessWidget {
-  final VoidCallback onUseDemoEpc;
-  const _SimulatorBanner({required this.onUseDemoEpc});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.phone_iphone, size: 18, color: Colors.blue.shade700),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Modo simulador — la señal RFID es generada automáticamente.',
-              style: TextStyle(fontSize: 12, color: Colors.blue.shade800),
-            ),
-          ),
-          const SizedBox(width: 8),
-          TextButton(
-            onPressed: onUseDemoEpc,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              foregroundColor: Colors.blue.shade700,
-            ),
-            child: const Text('Demo', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
   }
 }
 
