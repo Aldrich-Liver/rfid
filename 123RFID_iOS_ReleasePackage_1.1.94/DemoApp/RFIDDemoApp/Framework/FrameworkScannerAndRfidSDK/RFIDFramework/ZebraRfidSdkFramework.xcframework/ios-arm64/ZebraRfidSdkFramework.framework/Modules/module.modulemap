@@ -1,6 +1,0 @@
-framework module ZebraRfidSdkFramework {
-  umbrella header "ZebraRfidSdkFramework.h"
-  export *
-
-  module * { export * }
-}

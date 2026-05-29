@@ -1,6 +1,0 @@
-framework module ZebraScannerFramework {
-  umbrella header "ZebraScannerFramework.h"
-  export *
-
-  module * { export * }
-}

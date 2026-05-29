@@ -163,9 +163,20 @@ class _ConteoScreenState extends State<ConteoScreen>
   /// Compute the group key for an item
   String _groupKeyFor(String epc) {
     try {
-      final d = decodeEpc(epc);
-      final code = d.displayCode;
-      return code.replaceFirst(RegExp(r'^0+'), '');
+      final type = detectEpcType(epc);
+      switch (type) {
+        case EpcType.sgtin96:
+          final d = decodeEpc(epc);
+          return 'upc:${d.displayCode.replaceFirst(RegExp(r"^0+"), "")}';
+        case EpcType.grai96:
+          final l = decodeGrai96(epc);
+          return 'label:${l.displayLabel}';
+        case EpcType.sscc96:
+          final l = decodeSscc96(epc);
+          return 'label:${l.displayLabel}';
+        default:
+          return epc;
+      }
     } catch (_) {
       return epc; // raw EPC as its own group
     }
@@ -177,10 +188,17 @@ class _ConteoScreenState extends State<ConteoScreen>
     if (_groups.containsKey(key)) {
       _groups[key]!.items.add(item);
     } else {
-      final isDecoded = key != item.epc;
+      String displayCode;
+      if (key.startsWith('upc:')) {
+        displayCode = 'UPC: ${key.substring(4)}';
+      } else if (key.startsWith('label:')) {
+        displayCode = 'Etiqueta: ${key.substring(6)}';
+      } else {
+        displayCode = item.epc;
+      }
       _groups[key] = _GroupedRow(
         groupKey: key,
-        displayCode: isDecoded ? 'UPC: $key' : item.epc,
+        displayCode: displayCode,
         items: [item],
         firstSeen: DateTime.now(),
       );
@@ -410,8 +428,18 @@ class _GroupTileState extends State<_GroupTile> {
 
   void _showDetail(_ConteoItem item) {
     EpcDecodeResult? decoded;
-    try { decoded = decodeEpc(item.epc); } catch (_) {}
-    showDialog(context: context, builder: (_) => _TagDetailDialog(item: item, decoded: decoded));
+    LabelDecodeResult? labelDecoded;
+    final type = detectEpcType(item.epc);
+    try {
+      if (type == EpcType.sgtin96) {
+        decoded = decodeEpc(item.epc);
+      } else if (type == EpcType.grai96) {
+        labelDecoded = decodeGrai96(item.epc);
+      } else if (type == EpcType.sscc96) {
+        labelDecoded = decodeSscc96(item.epc);
+      }
+    } catch (_) {}
+    showDialog(context: context, builder: (_) => _TagDetailDialog(item: item, decoded: decoded, labelDecoded: labelDecoded));
   }
 
   @override
@@ -464,18 +492,20 @@ class _GroupTileState extends State<_GroupTile> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              _fieldLabel('SKU:'),
-                              const SizedBox(width: 4),
-                              _fieldValue('—'),
-                              const SizedBox(width: 16),
-                              _fieldLabel('Piezas:'),
-                              const SizedBox(width: 4),
-                              _fieldValue('—'),
-                            ],
-                          ),
+                          if (row.groupKey.startsWith('upc:')) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                _fieldLabel('SKU:'),
+                                const SizedBox(width: 4),
+                                _fieldValue('—'),
+                                const SizedBox(width: 16),
+                                _fieldLabel('Piezas:'),
+                                const SizedBox(width: 4),
+                                _fieldValue('—'),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -557,7 +587,8 @@ class _GroupTileState extends State<_GroupTile> {
 class _TagDetailDialog extends StatelessWidget {
   final _ConteoItem item;
   final EpcDecodeResult? decoded;
-  const _TagDetailDialog({required this.item, required this.decoded});
+  final LabelDecodeResult? labelDecoded;
+  const _TagDetailDialog({required this.item, required this.decoded, this.labelDecoded});
 
   void _copy(BuildContext context, String value, String label) {
     Clipboard.setData(ClipboardData(text: value));
@@ -571,6 +602,7 @@ class _TagDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final d = decoded;
+    final l = labelDecoded;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -608,7 +640,6 @@ class _TagDetailDialog extends StatelessWidget {
 
             if (d != null) ...[
               const SizedBox(height: 10),
-              // UPC / EAN
               if (d.upcA != null)
                 _DetailRow(
                   label: 'UPC-A',
@@ -632,10 +663,24 @@ class _TagDetailDialog extends StatelessWidget {
               _DetailRow(label: 'Company Prefix', value: d.companyPrefix),
               _DetailRow(label: 'Item Reference', value: d.itemReference),
               _DetailRow(label: 'Serial', value: d.serial.toString()),
+            ] else if (l != null) ...[
+              const SizedBox(height: 10),
+              _DetailRow(
+                label: 'Etiqueta',
+                value: l.displayLabel,
+                monospace: true,
+                onCopy: () => _copy(context, l.displayLabel, 'Etiqueta'),
+              ),
+              _DetailRow(
+                label: 'Tipo',
+                value: l.type == EpcType.grai96 ? 'GRAI-96' : 'SSCC-96',
+              ),
+              _DetailRow(label: 'Prefijo', value: l.letter),
+              _DetailRow(label: 'Número', value: l.numericPart),
             ] else ...[
               const SizedBox(height: 10),
               const Text(
-                'No es un EPC SGTIN-96 válido',
+                'Formato EPC no reconocido',
                 style: TextStyle(color: Colors.orange, fontSize: 12),
               ),
             ],
