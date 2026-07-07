@@ -235,6 +235,51 @@ class ZebraRfidManager(
     }
 
     // ------------------------------------------------------------------
+    // Write EPC
+    // ------------------------------------------------------------------
+
+    fun writeTag(targetEpc: String, newEpc: String, result: MethodChannel.Result) {
+        if (!isConnected || reader == null) {
+            result.error("NOT_CONNECTED", "Reader not connected", null)
+            return
+        }
+
+        val cleanTarget = targetEpc.trim().uppercase()
+        val cleanNewEpc = newEpc.trim().uppercase()
+
+        if (cleanTarget.isEmpty()) {
+            result.error("NO_TARGET", "No se detectó ninguna etiqueta para grabar", null)
+            return
+        }
+        if (cleanNewEpc.isEmpty() || cleanNewEpc.length % 4 != 0 || !cleanNewEpc.matches(Regex("^[0-9A-F]+$"))) {
+            result.error("INVALID_EPC", "El nuevo EPC debe ser hexadecimal con longitud múltiplo de 4", null)
+            return
+        }
+
+        try {
+            log("writeTag — target=$cleanTarget new=$cleanNewEpc")
+            val tagAccess = reader!!.Actions.TagAccess
+            val accessParams = tagAccess.WriteAccessParams()
+            accessParams.setOffset(2) // salta CRC + PC, escribe directo sobre el banco EPC
+            accessParams.setWriteData(cleanNewEpc)
+            accessParams.setWriteDataLength(cleanNewEpc.length / 4)
+
+            tagAccess.writeWait(cleanTarget, accessParams, null, null)
+            log("writeTag — SUCCESS")
+            result.success(null)
+        } catch (e: InvalidUsageException) {
+            log("writeTag — InvalidUsage: ${e.info}")
+            result.error("WRITE_ERROR", e.info, null)
+        } catch (e: OperationFailureException) {
+            log("writeTag — OperationFailure: ${e.results}")
+            result.error("WRITE_ERROR", e.results.toString(), null)
+        } catch (e: Exception) {
+            log("writeTag — Exception: ${e.message}")
+            result.error("WRITE_ERROR", e.message ?: "Error desconocido al grabar", null)
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Reader configuration
     // ------------------------------------------------------------------
 

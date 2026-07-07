@@ -7,6 +7,7 @@ import '../services/zebra_rfid_service.dart';
 import '../widgets/reader_status_card.dart';
 import 'conteo_screen.dart';
 import 'buscar_screen.dart';
+import 'grabado_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -119,6 +120,13 @@ class _HomeScreenState extends State<HomeScreen> {
     ));
   }
 
+  void _goToGrabado() {
+    if (!_isConnected) { _showError('Conecta un lector primero'); return; }
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => GrabadoScreen(rfid: _rfid),
+    ));
+  }
+
   // ------------------------------------------------------------------
   // UI
   // ------------------------------------------------------------------
@@ -190,6 +198,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: const Color(0xFF0070C0),
                         enabled: _isConnected,
                         onTap: _goToBuscar,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _ActionCard(
+                        icon: Icons.edit_note,
+                        label: 'Grabado',
+                        description: 'Graba un nuevo EPC en la etiqueta',
+                        color: const Color(0xFF2E7D32),
+                        enabled: _isConnected,
+                        onTap: _goToGrabado,
                       ),
                     ),
                   ],

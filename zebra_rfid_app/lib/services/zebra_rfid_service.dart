@@ -71,6 +71,14 @@ class ZebraRfidService {
     await _methodChannel.invokeMethod<void>('openBluetoothSettings');
   }
 
+  /// Escribe un nuevo EPC sobre la etiqueta cuyo EPC actual es [targetEpc].
+  Future<void> writeTag({required String targetEpc, required String newEpc}) async {
+    await _methodChannel.invokeMethod<void>('writeTag', {
+      'targetEpc': targetEpc,
+      'newEpc': newEpc,
+    });
+  }
+
   // ------------------------------------------------------------------
   // Internal
   // ------------------------------------------------------------------

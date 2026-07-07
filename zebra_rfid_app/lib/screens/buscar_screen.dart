@@ -149,11 +149,13 @@ class _BuscarScreenState extends State<BuscarScreen>
     _pulseAnim.stop();
     _isScanning = false;
     try { await widget.rfid.stopInventory(); } catch (_) {}
-    if (mounted) setState(() {
-      _isScanning = false;
-      _targetEpc = null;
-      _targetUpc = null;
-    });
+    if (mounted) {
+      setState(() {
+        _isScanning = false;
+        _targetEpc = null;
+        _targetUpc = null;
+      });
+    }
   }
 
   // ------------------------------------------------------------------

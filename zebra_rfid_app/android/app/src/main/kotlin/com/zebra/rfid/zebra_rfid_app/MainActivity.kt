@@ -49,6 +49,17 @@ class MainActivity : FlutterActivity() {
                         ?: result.success(false)
                     "getReaderInfo" -> manager?.getReaderInfo(result)
                         ?: result.error("NOT_CONNECTED", "Reader not connected", null)
+                    "writeTag" -> {
+                        val args = call.arguments as? Map<*, *>
+                        val targetEpc = args?.get("targetEpc") as? String
+                        val newEpc = args?.get("newEpc") as? String
+                        if (targetEpc == null || newEpc == null) {
+                            result.error("INVALID_ARGS", "targetEpc y newEpc son requeridos", null)
+                        } else {
+                            manager?.writeTag(targetEpc, newEpc, result)
+                                ?: result.error("NOT_CONNECTED", "Reader not connected", null)
+                        }
+                    }
                     "openBluetoothSettings" -> {
                         startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
                         result.success(null)

@@ -74,6 +74,14 @@ class ZebraRfidPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, srfidISdkA
             result(connectedReaderId != -1)
         case "getReaderInfo":
             getReaderInfo(result: result)
+        case "writeTag":
+            guard let args = call.arguments as? [String: Any],
+                  let targetEpc = args["targetEpc"] as? String,
+                  let newEpc = args["newEpc"] as? String else {
+                result(FlutterError(code: "INVALID_ARGS", message: "targetEpc y newEpc son requeridos", details: nil))
+                return
+            }
+            writeTag(targetEpc: targetEpc, newEpc: newEpc, result: result)
         case "openBluetoothSettings":
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(url)
@@ -350,6 +358,49 @@ class ZebraRfidPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, srfidISdkA
             message: "No se pudo iniciar el inventario (cód. \(status)). Desconecta y vuelve a conectar.",
             details: nil
         ))
+    }
+
+    private func writeTag(targetEpc: String, newEpc: String, result: @escaping FlutterResult) {
+        guard connectedReaderId != -1 else {
+            result(FlutterError(code: "NOT_CONNECTED", message: "No hay lector conectado", details: nil))
+            return
+        }
+
+        let cleanTarget = targetEpc.trimmingCharacters(in: .whitespaces).uppercased()
+        let cleanNewEpc = newEpc.trimmingCharacters(in: .whitespaces).uppercased()
+
+        guard !cleanTarget.isEmpty else {
+            result(FlutterError(code: "NO_TARGET", message: "No se detectó ninguna etiqueta para grabar", details: nil))
+            return
+        }
+        let isValidHex = cleanNewEpc.range(of: "^[0-9A-F]+$", options: .regularExpression) != nil
+        guard !cleanNewEpc.isEmpty, cleanNewEpc.count % 4 == 0, isValidHex else {
+            result(FlutterError(code: "INVALID_EPC", message: "El nuevo EPC debe ser hexadecimal con longitud múltiplo de 4", details: nil))
+            return
+        }
+
+        log("writeTag — target=\(cleanTarget) new=\(cleanNewEpc)")
+        var accessTagData: srfidTagData? = srfidTagData()
+        var statusMsg: NSString?
+        let status = rfidApi.srfidWriteTag(
+            connectedReaderId,
+            aTagID: cleanTarget,
+            aAccessTagData: &accessTagData,
+            aMemoryBank: SRFID_MEMORYBANK_EPC,
+            aOffset: 2,
+            aData: cleanNewEpc,
+            aPassword: 0,
+            aDoBlockWrite: false,
+            aStatusMessage: &statusMsg
+        )
+
+        if status == SRFID_RESULT_SUCCESS {
+            log("writeTag — SUCCESS")
+            result(nil)
+        } else {
+            log("writeTag — FAILED status=\(status) msg=\(statusMsg ?? "")")
+            result(FlutterError(code: "WRITE_ERROR", message: (statusMsg as String?) ?? "No se pudo grabar la etiqueta (cód. \(status))", details: nil))
+        }
     }
 
     private func stopInventory(result: @escaping FlutterResult) {
