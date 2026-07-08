@@ -297,6 +297,12 @@ class ZebraRfidManager(
         rfidReader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true)
         rfidReader.Config.setStartTrigger(triggerInfo.StartTrigger)
         rfidReader.Config.setStopTrigger(triggerInfo.StopTrigger)
+
+        try {
+            rfidReader.Config.setBeeperVolume(BEEPER_VOLUME.QUIET_BEEP)
+        } catch (e: Exception) {
+            log("No se pudo silenciar el beeper: ${e.message}")
+        }
     }
 
     // ------------------------------------------------------------------

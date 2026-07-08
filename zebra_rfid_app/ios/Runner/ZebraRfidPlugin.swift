@@ -119,6 +119,7 @@ class ZebraRfidPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, srfidISdkA
             let ascii = rfidApi.srfidEstablishAsciiConnection(connectedReaderId)
             if ascii == SRFID_RESULT_SUCCESS {
                 asciiReady = true
+                silenceBeeper()
                 result(connectedReaderName)
                 return
             }
@@ -161,6 +162,7 @@ class ZebraRfidPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, srfidISdkA
                 let ascii = self.rfidApi.srfidEstablishAsciiConnection(self.connectedReaderId)
                 if ascii == SRFID_RESULT_SUCCESS {
                     self.asciiReady = true
+                    self.silenceBeeper()
                 } else if attempts >= 30 {
                     self.failPending()
                     return
@@ -176,6 +178,13 @@ class ZebraRfidPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, srfidISdkA
             self.pendingConnectResult = nil
             pending?(self.connectedReaderName)
         }
+    }
+
+    /// Silencia el beeper del lector para que no suene en cada lectura de tag.
+    private func silenceBeeper() {
+        var statusMsg: NSString?
+        let status = rfidApi.srfidSetBeeperConfig(connectedReaderId, aBeeperConfig: SRFID_BEEPERCONFIG_QUIET, aStatusMessage: &statusMsg)
+        log("silenceBeeper — status=\(status)")
     }
 
     private func failPending() {
