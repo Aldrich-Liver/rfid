@@ -1,3 +1,13 @@
+/// Estado de decodificación de un EPC.
+enum EpcStatus {
+  /// Header 0x30 y decodificación SGTIN-96 exitosa.
+  decodificado,
+  /// Header distinto de 0x30 — chip no encodeado con estándar GS1.
+  sinEncodear,
+  /// Header 0x30 pero la decodificación falló, o formato no reconocido que sí decodifica.
+  desconocido,
+}
+
 class RfidTag {
   final String epc;
   final int rssi;

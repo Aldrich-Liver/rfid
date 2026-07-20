@@ -82,6 +82,22 @@ class ZebraRfidPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, srfidISdkA
                 return
             }
             writeTag(targetEpc: targetEpc, newEpc: newEpc, result: result)
+        case "getAntennaPower":
+            getAntennaPower(result: result)
+        case "setAntennaPower":
+            guard let args = call.arguments as? [String: Any],
+                  let power = args["power"] as? Int else {
+                result(FlutterError(code: "INVALID_ARGS", message: "power es requerido", details: nil))
+                return
+            }
+            setAntennaPower(power: Int16(power), result: result)
+        case "readTid":
+            guard let args = call.arguments as? [String: Any],
+                  let epc = args["epc"] as? String else {
+                result(FlutterError(code: "INVALID_ARGS", message: "epc es requerido", details: nil))
+                return
+            }
+            readTid(epc: epc, result: result)
         case "openBluetoothSettings":
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(url)
@@ -419,6 +435,147 @@ class ZebraRfidPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, srfidISdkA
         var statusMsg: NSString?
         rfidApi.srfidStopInventory(connectedReaderId, aStatusMessage: &statusMsg)
         result(nil)
+    }
+
+    // MARK: - Antenna power
+
+    private func ensureAsciiConnection() -> Bool {
+        if asciiReady { return true }
+        let ascii = rfidApi.srfidEstablishAsciiConnection(connectedReaderId)
+        if ascii == SRFID_RESULT_SUCCESS {
+            asciiReady = true
+            return true
+        }
+        return false
+    }
+
+    private func getAntennaPower(result: @escaping FlutterResult) {
+        guard connectedReaderId != -1 else {
+            result(FlutterError(code: "NOT_CONNECTED", message: "No hay lector conectado", details: nil))
+            return
+        }
+        guard ensureAsciiConnection() else {
+            result(FlutterError(code: "ASCII_ERROR", message: "Sin conexión ASCII. Reconecta el lector.", details: nil))
+            return
+        }
+        var antennaConfig: srfidAntennaConfiguration? = srfidAntennaConfiguration()
+        var statusMsg: NSString?
+        var status = rfidApi.srfidGetAntennaConfiguration(
+            connectedReaderId, aAntennaConfiguration: &antennaConfig, aStatusMessage: &statusMsg
+        )
+        if status == SRFID_RESULT_ASCII_CONNECTION_REQUIRED {
+            asciiReady = false
+            let ascii = rfidApi.srfidEstablishAsciiConnection(connectedReaderId)
+            if ascii == SRFID_RESULT_SUCCESS {
+                asciiReady = true
+                status = rfidApi.srfidGetAntennaConfiguration(
+                    connectedReaderId, aAntennaConfiguration: &antennaConfig, aStatusMessage: &statusMsg
+                )
+            } else {
+                result(FlutterError(code: "ASCII_ERROR", message: "No se pudo restablecer la conexión ASCII", details: nil))
+                return
+            }
+        }
+        guard status == SRFID_RESULT_SUCCESS, let config = antennaConfig else {
+            result(FlutterError(code: "POWER_ERROR", message: "Error al leer potencia (cód. \(status)): \(statusMsg ?? "")", details: nil))
+            return
+        }
+        var caps: srfidReaderCapabilitiesInfo? = srfidReaderCapabilitiesInfo()
+        rfidApi.srfidGetReaderCapabilitiesInfo(
+            connectedReaderId, aReaderCapabilitiesInfo: &caps, aStatusMessage: &statusMsg
+        )
+        result([
+            "currentPower": Int(config.getPower()),
+            "minPower": Int(caps?.getMinPower() ?? 0),
+            "maxPower": Int(caps?.getMaxPower() ?? 300),
+            "powerStep": Int(caps?.getPowerStep() ?? 10)
+        ])
+    }
+
+    private func setAntennaPower(power: Int16, result: @escaping FlutterResult) {
+        guard connectedReaderId != -1 else {
+            result(FlutterError(code: "NOT_CONNECTED", message: "No hay lector conectado", details: nil))
+            return
+        }
+        var antennaConfig: srfidAntennaConfiguration? = srfidAntennaConfiguration()
+        var statusMsg: NSString?
+        let getStatus = rfidApi.srfidGetAntennaConfiguration(
+            connectedReaderId, aAntennaConfiguration: &antennaConfig, aStatusMessage: &statusMsg
+        )
+        guard getStatus == SRFID_RESULT_SUCCESS, let config = antennaConfig else {
+            result(FlutterError(code: "POWER_ERROR", message: "No se pudo leer la configuración actual", details: nil))
+            return
+        }
+        config.setPower(Int16(power))
+        let setStatus = rfidApi.srfidSetAntennaConfiguration(
+            connectedReaderId, aAntennaConfiguration: config, aStatusMessage: &statusMsg
+        )
+        guard setStatus == SRFID_RESULT_SUCCESS else {
+            result(FlutterError(
+                code: "POWER_ERROR",
+                message: "No se pudo establecer la potencia (cód. \(setStatus))",
+                details: nil
+            ))
+            return
+        }
+
+        // El lector puede rechazar o recortar el valor pedido (p.ej. si excede
+        // el máximo soportado). Releemos la config para reportar lo que
+        // realmente quedó aplicado, no lo que se pidió.
+        var appliedConfig: srfidAntennaConfiguration? = srfidAntennaConfiguration()
+        let readBackStatus = rfidApi.srfidGetAntennaConfiguration(
+            connectedReaderId, aAntennaConfiguration: &appliedConfig, aStatusMessage: &statusMsg
+        )
+        guard readBackStatus == SRFID_RESULT_SUCCESS, let applied = appliedConfig else {
+            log("Antenna power set requested \(power), pero no se pudo confirmar el valor aplicado")
+            result(FlutterError(
+                code: "POWER_ERROR",
+                message: "Potencia establecida pero no se pudo confirmar el valor aplicado",
+                details: nil
+            ))
+            return
+        }
+
+        let appliedPower = Int(applied.getPower())
+        if appliedPower != Int(power) {
+            log("Antenna power: se pidió \(power) pero el lector aplicó \(appliedPower)")
+        } else {
+            log("Antenna power set to \(appliedPower)")
+        }
+        result(appliedPower)
+    }
+
+    // MARK: - TID read
+
+    private func readTid(epc: String, result: @escaping FlutterResult) {
+        guard connectedReaderId != -1 else {
+            result(FlutterError(code: "NOT_CONNECTED", message: "No hay lector conectado", details: nil))
+            return
+        }
+        let cleanEpc = epc.trimmingCharacters(in: .whitespaces).uppercased()
+        var tagData: srfidTagData? = srfidTagData()
+        var statusMsg: NSString?
+        let status = rfidApi.srfidReadTag(
+            connectedReaderId,
+            aTagID: cleanEpc,
+            aAccessTagData: &tagData,
+            aMemoryBank: SRFID_MEMORYBANK_TID,
+            aOffset: 0,
+            aLength: 6,
+            aPassword: 0,
+            aStatusMessage: &statusMsg
+        )
+        log("readTid — epc=\(cleanEpc) status=\(status) msg=\(statusMsg ?? "nil")")
+        if status == SRFID_RESULT_SUCCESS {
+            let tid = tagData?.getMemoryBankData() ?? ""
+            result(tid)
+        } else {
+            result(FlutterError(
+                code: "TID_ERROR",
+                message: "No se pudo leer TID (cód. \(status)): \(statusMsg ?? "")",
+                details: nil
+            ))
+        }
     }
 
     // MARK: - srfidISdkApiDelegate

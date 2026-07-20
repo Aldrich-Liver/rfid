@@ -11,10 +11,34 @@ class _ConteoItem {
   final Set<int> antennas = {};
   int rssi;
   DateTime lastSeen;
+  String? tid;
+  String? pc;
+  final EpcStatus status;
 
   _ConteoItem({required this.epc, required int antenna, required this.rssi})
-      : lastSeen = DateTime.now() {
+      : lastSeen = DateTime.now(),
+        status = _computeEpcStatus(epc) {
     antennas.add(antenna);
+  }
+
+  /// Regla: si detectEpcType devuelve null (header no reconocido, ej. 0xE2),
+  /// la etiqueta no está encodeada con ningún estándar GS1 conocido.
+  static EpcStatus _computeEpcStatus(String epc) {
+    final type = detectEpcType(epc);
+    if (type == null) return EpcStatus.sinEncodear;
+    try {
+      switch (type) {
+        case EpcType.sgtin96:
+          decodeEpc(epc);
+        case EpcType.grai96:
+          decodeGrai96(epc);
+        case EpcType.sscc96:
+          decodeSscc96(epc);
+      }
+      return EpcStatus.decodificado;
+    } catch (_) {
+      return EpcStatus.desconocido;
+    }
   }
 
   void update(RfidTag tag) {
@@ -118,6 +142,19 @@ class _ConteoScreenState extends State<ConteoScreen>
     _isScanning = false; // Marcar detenido antes del await para que dispose no repita stopInventory
     try { await widget.rfid.stopInventory(); } catch (_) {}
     if (mounted) setState(() { _isScanning = false; _scanError = null; });
+    // Con el inventario ya detenido, el SDK puede singularizar tags para leer TID.
+    _fetchPendingTids();
+  }
+
+  /// Lanza lecturas de TID para todos los items sinEncodear que aún no tienen TID.
+  /// Debe llamarse DESPUÉS de detener el inventario.
+  void _fetchPendingTids() {
+    final pending = _items.values
+        .where((item) => item.status == EpcStatus.sinEncodear && item.tid == null)
+        .toList();
+    for (final item in pending) {
+      _fetchTid(item);
+    }
   }
 
   void _toggleScan() =>
@@ -209,6 +246,17 @@ class _ConteoScreenState extends State<ConteoScreen>
   void _onError(Object err) {
     _showError(err.toString());
     setState(() => _isScanning = false);
+  }
+
+  /// Lee el banco TID del tag de forma asíncrona. Si falla, tid queda null
+  /// sin interrumpir el conteo ni mostrar error al usuario.
+  void _fetchTid(_ConteoItem item) {
+    widget.rfid.readTid(item.epc).then((tid) {
+      if (!mounted || !_items.containsKey(item.epc)) return;
+      setState(() => _items[item.epc]!.tid = tid);
+    }).catchError((_) {
+      // TID permanece null — lectura no soportada o tag fuera de rango
+    });
   }
 
   void _clearItems() {
@@ -506,6 +554,24 @@ class _GroupTileState extends State<_GroupTile> {
                               ],
                             ),
                           ],
+                          if (row.items.first.status == EpcStatus.sinEncodear) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade100,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Sin encodear',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.orange.shade800,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -638,7 +704,50 @@ class _TagDetailDialog extends StatelessWidget {
               onCopy: () => _copy(context, item.epc, 'EPC'),
             ),
 
-            if (d != null) ...[
+            if (item.status == EpcStatus.sinEncodear) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, size: 15, color: Colors.orange.shade700),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Sin encodear — header: 0x${item.epc.length >= 2 ? item.epc.substring(0, 2).toUpperCase() : "??"}',
+                        style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (item.tid != null)
+                _DetailRow(
+                  label: 'TID',
+                  value: item.tid!,
+                  monospace: true,
+                  onCopy: () => _copy(context, item.tid!, 'TID'),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 120,
+                        child: Text('TID', style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
+                      ),
+                      Text('Leyendo...', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+                    ],
+                  ),
+                ),
+            ] else if (d != null) ...[
               const SizedBox(height: 10),
               if (d.upcA != null)
                 _DetailRow(

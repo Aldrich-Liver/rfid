@@ -79,6 +79,35 @@ class ZebraRfidService {
     });
   }
 
+  /// Retorna la configuración de potencia de la antena: {currentPower, minPower, maxPower, powerStep}.
+  /// Solo soportado en iOS.
+  Future<Map<String, int>> getAntennaPower() async {
+    final raw = await _methodChannel.invokeMethod<Map<Object?, Object?>>('getAntennaPower');
+    if (raw == null) throw PlatformException(code: 'POWER_ERROR', message: 'No data');
+    return {
+      'currentPower': raw['currentPower'] as int? ?? 0,
+      'minPower': raw['minPower'] as int? ?? 0,
+      'maxPower': raw['maxPower'] as int? ?? 300,
+      'powerStep': raw['powerStep'] as int? ?? 10,
+    };
+  }
+
+  /// Establece la potencia de transmisión de la antena (iOS only). Valor en décimas de dBm.
+  /// Retorna la potencia realmente aplicada por el lector, que puede diferir
+  /// de [power] si el lector la recortó a su rango soportado.
+  Future<int> setAntennaPower(int power) async {
+    final applied = await _methodChannel.invokeMethod<int>('setAntennaPower', {'power': power});
+    return applied ?? power;
+  }
+
+  /// Lee el banco TID (memory bank 2) de la etiqueta con [epc].
+  /// Retorna el TID como string hex. Lanza [PlatformException] si falla.
+  /// Solo soportado en iOS.
+  Future<String> readTid(String epc) async {
+    final tid = await _methodChannel.invokeMethod<String>('readTid', {'epc': epc});
+    return tid ?? '';
+  }
+
   // ------------------------------------------------------------------
   // Internal
   // ------------------------------------------------------------------

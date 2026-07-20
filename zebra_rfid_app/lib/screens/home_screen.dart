@@ -23,6 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   ReaderInfo? _readerInfo;
 
+  Map<String, int>? _powerInfo;
+  bool _powerLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -72,6 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _readerInfo = info;
         });
       }
+      if (defaultTargetPlatform == TargetPlatform.iOS) _loadPower();
     } on PlatformException catch (e) {
       _showError(e.message ?? 'Error al conectar');
     } finally {
@@ -87,12 +91,92 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _isConnected = false;
         _readerInfo = null;
+        _powerInfo = null;
       });
     } on PlatformException catch (e) {
       _showError(e.message ?? 'Error al desconectar');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadPower() async {
+    if (!_isConnected) return;
+    setState(() => _powerLoading = true);
+    try {
+      await _rfid.stopInventory();
+      await Future.delayed(const Duration(milliseconds: 100));
+      final info = await _rfid.getAntennaPower();
+      if (mounted) setState(() => _powerInfo = info);
+    } on PlatformException catch (e) {
+      _showError(e.message ?? 'Error al leer potencia');
+    } finally {
+      if (mounted) setState(() => _powerLoading = false);
+    }
+  }
+
+  Future<void> _setPower(int newPower) async {
+    setState(() => _powerLoading = true);
+    try {
+      final applied = await _rfid.setAntennaPower(newPower);
+      await _loadPower();
+      if (mounted && applied != newPower) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('El lector aplicó $applied (se pidió $newPower)'),
+        ));
+      }
+    } on PlatformException catch (e) {
+      _showError(e.message ?? 'Error al configurar potencia');
+      if (mounted) setState(() => _powerLoading = false);
+    }
+  }
+
+  void _showPowerDialog() {
+    if (_powerInfo == null) return;
+    final min = _powerInfo!['minPower']!;
+    final max = _powerInfo!['maxPower']!;
+    final step = _powerInfo!['powerStep']!;
+    final controller = TextEditingController(text: '${_powerInfo!['currentPower']}');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Configurar potencia'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Mín: $min · Máx: $max · Paso: $step',
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Nueva potencia',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () {
+              final val = int.tryParse(controller.text);
+              if (val == null || val < min || val > max) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Valor inválido (debe ser entre $min y $max)'),
+                ));
+                return;
+              }
+              Navigator.pop(ctx);
+              _setPower(val);
+            },
+            child: const Text('Aplicar'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showError(String msg) {
@@ -161,6 +245,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 onConnect: _connect,
                 onDisconnect: _disconnect,
               ),
+              if (_isConnected && defaultTargetPlatform == TargetPlatform.iOS) ...
+                [
+                  const SizedBox(height: 16),
+                  _PowerCard(
+                    powerInfo: _powerInfo,
+                    isLoading: _powerLoading,
+                    onEdit: _showPowerDialog,
+                    onRefresh: _loadPower,
+                  ),
+                ],
               const SizedBox(height: 32),
 
               // ── Section title ────────────────────────────────────
@@ -248,6 +342,95 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Power card
+// ---------------------------------------------------------------------------
+
+class _PowerCard extends StatelessWidget {
+  final Map<String, int>? powerInfo;
+  final bool isLoading;
+  final VoidCallback onEdit;
+  final VoidCallback onRefresh;
+
+  const _PowerCard({
+    required this.powerInfo,
+    required this.isLoading,
+    required this.onEdit,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final current = powerInfo?['currentPower'];
+    final min = powerInfo?['minPower'];
+    final max = powerInfo?['maxPower'];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF833177).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.settings_input_antenna, color: Color(0xFF833177), size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Potencia de antena',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A2340))),
+                const SizedBox(height: 2),
+                isLoading
+                    ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(
+                        current != null
+                            ? '$current dBm  (rango $min – $max)'
+                            : 'No disponible',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: current != null ? Colors.grey.shade700 : Colors.grey.shade400,
+                        ),
+                      ),
+                if (!isLoading && max != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Potencia máxima soportada: $max dBm',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 20),
+            color: Colors.grey.shade500,
+            tooltip: 'Actualizar',
+            onPressed: isLoading ? null : onRefresh,
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit, size: 20),
+            color: const Color(0xFF833177),
+            tooltip: 'Cambiar potencia',
+            onPressed: (isLoading || current == null) ? null : onEdit,
+          ),
+        ],
       ),
     );
   }
